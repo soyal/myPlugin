@@ -1,0 +1,66 @@
+* {padding:0; margin:0;}
+body {
+	font-family: Microsoft YaHei;
+	font-size: 1.2em;
+}
+ul {
+	list-style: none;
+}
+
+#pageContent {
+	width:100%;
+	height:100%;
+	position: relative;
+}
+#pageContent .page {
+	position: absolute;
+	background-color: #C7C7E2;
+	width:100%;
+	height:100%;
+	-webkit-transition: transform 0.5s,background 0.5s;
+	-moz-transition: transform 0.5s,background 0.5s;
+
+}
+#pageContent .up {
+	transform:translate3d(0,-100%,0);
+	background-color: #E6E6F2;
+}
+#pageContent ul.index {
+	position: absolute;
+	top:50%;
+	margin-left:20px;
+	z-index:100;
+}
+#pageContent ul.index li {
+	position: relative;
+	width:10px;
+	height:10px;
+	border-radius:7px;
+	border:2px solid #666;
+	margin-top:10px;
+	cursor:pointer;
+
+}
+#pageContent ul.index li.active {
+	background-color: #666;
+}
+#pageContent .tip {
+	position: absolute;
+	display: none;
+	z-index:101;
+	color:#333;
+	font-size: 16px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
