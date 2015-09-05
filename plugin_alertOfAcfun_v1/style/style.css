@@ -1,0 +1,31 @@
+﻿*{
+    margin: 0;
+    padding: 0;
+}
+.area-info {
+    position: fixed;
+    font-family: Microsoft YaHei;
+    font-size: 12px;
+    font-weight: bold;
+    bottom: 50px;
+    left: 0;
+}
+.area-info .info-item {
+    position: relative;
+    left:0;
+    background-color: #ff9101;
+    color:#fff;
+    margin:10px 0;
+    padding:5px 15px;
+    -webkit-transition: all 0.3s;
+    -moz-transition: all 0.3s;
+}
+.area-info .hide{
+    left:-300px;
+}
+.area-info .show{
+    left:0;
+}
+.area-info .info-item i{
+    font-style: normal;
+}
