@@ -3,20 +3,27 @@ var row_count = 4;
 var col_count = 4;
 var animationTime = 100;//毫秒
 var isOperating = false;//是否正在执行操作，用于处理在方块移动过程中进行操作的问题
-for(var _i=0;_i<row_count;_i++) {
-    box_array[_i] = [];
-}
-for(var _j=0;_j<box_array.length;_j++) {
-    for(var _k=0;_k<col_count;_k++) {
-        box_array[_j][_k] = null;
+
+function init_box_array() {
+    for(var _i=0;_i<row_count;_i++) {
+        box_array[_i] = [];
+    }
+    for(var _j=0;_j<box_array.length;_j++) {
+        for(var _k=0;_k<col_count;_k++) {
+            box_array[_j][_k] = null;
+        }
     }
 }
+function init_container() {
+    $container.find("div").remove();
+}
+
 
 //规则
 var rule = {
     initCoumt : 2,//方块初始化数量
     addCount : 1,//方块每次增加数量
-    detect : function(pos,direction) {//pos为BOX在二维数组中的坐标，参数direction{dire : "left"||"right"||"top"||"bottom"}
+    detect : function(pos,direction,hasMerged) {//pos为BOX在二维数组中的坐标，参数direction{dire : "left"||"right"||"top"||"bottom"}
         var result = {};//用于存放返回结果
         switch (direction.dire) {
             case "left" :
@@ -24,7 +31,7 @@ var rule = {
                     //如果左边某位置有方块
                     if(box_array[pos.row][col] != undefined) {
                         //且该方块的值等于移动中的方块
-                        if(box_array[pos.row][col].value == box_array[pos.row][pos.col].value) {
+                        if(box_array[pos.row][col].value == box_array[pos.row][pos.col].value&&hasMerged == false) {
                             result.action = "merge";//合并
                             result.target = {
                                 row : pos.row,
@@ -63,13 +70,14 @@ var rule = {
                     }
 
                 }
+                return {action : "none"};
                 break;
             case "top" :
                 for(var row=pos.row-1;row>=0;row--) {
                     //如果上边某位置有方块
                     if(box_array[row][pos.col] != undefined) {
                         //且该方块的值等于移动中的方块
-                        if(box_array[row][pos.col].value == box_array[pos.row][pos.col].value) {
+                        if(box_array[row][pos.col].value == box_array[pos.row][pos.col].value&&hasMerged == false) {
                             result.action = "merge";//合并
                             result.target = {
                                 row : row,
@@ -108,13 +116,14 @@ var rule = {
                     }
 
                 }
+                return {action : "none"};
                 break;
             case "right":
                 for(var col=pos.col+1;col<col_count;col++) {
                     //如果右边某位置有方块
                     if(box_array[pos.row][col] != undefined) {
                         //且该方块的值等于移动中的方块
-                        if(box_array[pos.row][col].value == box_array[pos.row][pos.col].value) {
+                        if(box_array[pos.row][col].value == box_array[pos.row][pos.col].value&&hasMerged == false) {
                             result.action = "merge";//合并
                             result.target = {
                                 row : pos.row,
@@ -153,13 +162,14 @@ var rule = {
                     }
 
                 }
+                return {action : "none"};
                 break;
             case "bottom" :
                 for(var row=pos.row+1;row<row_count;row++) {
                     //如果下边某位置有方块
                     if(box_array[row][pos.col] != undefined) {
                         //且该方块的值等于移动中的方块
-                        if(box_array[row][pos.col].value == box_array[pos.row][pos.col].value) {
+                        if(box_array[row][pos.col].value == box_array[pos.row][pos.col].value&&hasMerged==false) {
                             result.action = "merge";//合并
                             result.target = {
                                 row : row,
@@ -198,6 +208,7 @@ var rule = {
                     }
 
                 }
+                return {action : "none"};
                 break;
             default  :
                 return false;
@@ -206,10 +217,24 @@ var rule = {
 };
 var $container = $("#container");//游戏棋盘
 
-initGame();//在游戏棋盘中随机出现方块
+
 
 //按键事件
 $(function() {
+    $("#start").click(function() {
+        initGame();
+        $(this).text("Restart!");
+
+    });
+    $("#again").click(function() {
+        $("#mask").animate({
+            opacity: 0
+        },200,function() {
+            $("#mask").css("display","none");
+            initGame();
+            $("#start").text("Restart!");
+        });
+    });
     $(document).on("keyup",function(e) {
         var keyCode = e.keyCode;
         switch (keyCode) {
@@ -250,20 +275,18 @@ function Box(value) {
 
 //初始化游戏
 function initGame() {
+    init_box_array();//初始化数组
+    init_container();//初始化界面
     //var array = randomGenerate(rule.initCoumt);//初始化，首先出现若干随机方块
     //drawBoxes(array);
     generate([{
-        row : 1,
+        row : 0,
         col : 0,
         value : 4
     },{
-        row : 2,
+        row : 1,
         col : 0,
-        value : 2
-    },{
-        row : 3,
-        col : 0,
-        value : 2
+        value : 4
     }]);
 }
 
@@ -286,7 +309,15 @@ function drawBoxes(array) {
             }
 
         }
-
+        var length = getAllBlank().length;
+        //是否失败判断
+        if(length == 0) {
+            if(isDefeat()) {
+                $("#mask").css("display","block").animate({
+                    opacity : 0.8
+                },200);
+            }
+        }
 }
 
 //坐标转换函数，用于映射数组到界面
@@ -302,28 +333,90 @@ function positionSwitch(obj) {//obj{row:xx,col:xx}row,col从0开始
 function randomGenerate(amount) {//参数为生成数量
     var array = [];
     for(var i= 0,length=amount;i<length;i++) {
-        var n1 = Math.floor(Math.random()*4);
-        var n2 = Math.floor(Math.random()*4);
-        while(box_array[n1][n2] != undefined) {
-            n1 = Math.floor(Math.random()*4);
-            n2 = Math.floor(Math.random()*4);
-        }
-        box_array[n1][n2] = new Box(Math.round(Math.random()) == 1?4:2);
+        var blank_array = getAllBlank();
+        var random = getRandomNum(blank_array.length);
+        box_array[blank_array[random].row][blank_array[random].col] = new Box(Math.round(Math.random()) == 1?4:2);
         //console.log(n1);
-       // console.log(n2);
+        // console.log(n2);
         array.push({
-            row : n1,
-            col : n2
+            row : blank_array[random].row,
+            col : blank_array[random].col
         });
+       // console.log(blank_array.length);
     }
     return array;
 }
+
+//获取[0,n)的随机整数
+function getRandomNum(n) {
+    return Math.floor(Math.random()*n);
+}
+
+//获取所有空位的信息
+function getAllBlank() {
+    var blank_array=[];
+    for(var row= 0;row<row_count;row++) {
+        for(var col=0;col<col_count;col++) {
+            if(box_array[row][col] == undefined) {
+                blank_array.push({
+                    row : row,
+                    col : col
+                });
+            }
+        }
+    }
+    return blank_array;
+}
+
 //规定生成特定位置方块
 function generate(array) {
     for(var i=0;i<array.length;i++) {
         box_array[array[i].row][array[i].col] = new Box(array[i].value);
     }
     drawBoxes(array);
+}
+
+//判断是否游戏失败
+function isDefeat() {
+    for(var row=0;row<row_count;row++) {
+        for(var col=0;col<col_count;col++) {
+            if(box_array[row][col]!=undefined) {
+                var target_left = rule.detect({
+                    row : row,
+                    col : col
+                },{
+                    dire : "left"
+                },false);
+                var target_top = rule.detect({
+                    row : row,
+                    col : col
+                },{
+                    dire : "top"
+                },false);
+                var target_right = rule.detect({
+                    row : row,
+                    col : col
+                },{
+                    dire : "right"
+                },false);
+                var target_bottom = rule.detect({
+                    row : row,
+                    col : col
+                },{
+                    dire : "bottom"
+                },false);
+                if(canMove(target_left)||canMove(target_top)||canMove(target_right)||canMove(target_bottom)) {
+                    return false;
+                }
+            }
+
+        }
+    }
+    return true;
+}
+
+function canMove(target) {
+    return target.action == "merge"||target.action == "move";
 }
 
 //移动函数
@@ -334,6 +427,7 @@ function moveTo(obj) {
     switch (dire) {
         case "left":
             for(var row=0;row<box_array.length;row++) {
+                var hasMerged = false;
                 for(var col=1;col<box_array[row].length;col++) {
                     if(box_array[row][col] != undefined) {
                         var obj = {//原对象坐标封装
@@ -342,9 +436,12 @@ function moveTo(obj) {
                         };
                         var result = rule.detect(obj, {
                                 dire :"left"
-                            }
+                            },hasMerged
                         );
-                       if(operateBox(result,obj))
+                        if(result.action == "merge") {
+                            hasMerged = true;
+                        }
+                        if(operateBox(result,obj))
                             available = true;
                     }
                 }
@@ -352,6 +449,7 @@ function moveTo(obj) {
             break;
         case "top":
             for(var col=0;col<col_count;col++) {
+                var hasMerged = false;
                 for(var row=1;row<row_count;row++) {
                     if(box_array[row][col] != undefined) {
                         var obj = {//原对象坐标封装
@@ -360,8 +458,12 @@ function moveTo(obj) {
                         };
                         var result = rule.detect(obj, {
                                 dire :"top"
-                            }
+                            },hasMerged
                         );
+
+                        if(result.action == "merge") {
+                            hasMerged = true;
+                        }
                         if(operateBox(result,obj))
                             available = true;
                     }
@@ -370,6 +472,7 @@ function moveTo(obj) {
             break;
         case "right":
             for(var row=0;row<box_array.length;row++) {
+                var hasMerged = false;
                 for(var col=box_array[row].length-2;col>=0;col--) {
                     if(box_array[row][col] != undefined) {
                         var obj = {//原对象坐标封装
@@ -378,8 +481,11 @@ function moveTo(obj) {
                         };
                         var result = rule.detect(obj, {
                                 dire :"right"
-                            }
+                            },hasMerged
                         );
+                        if(result.action == "merge") {
+                            hasMerged = true;
+                        }
                         if(operateBox(result,obj))
                             available = true;
                     }
@@ -389,6 +495,7 @@ function moveTo(obj) {
             break;
         case "bottom":
             for(var col=0;col<col_count;col++) {
+                var hasMerged = false;
                 for(var row=row_count-2;row>=0;row--) {
                     if(box_array[row][col] != undefined) {
                         var obj = {//原对象坐标封装
@@ -397,8 +504,11 @@ function moveTo(obj) {
                         };
                         var result = rule.detect(obj, {
                                 dire :"bottom"
-                            }
+                            },hasMerged
                         );
+                        if(result.action == "merge") {
+                            hasMerged = true;
+                        }
                         if(operateBox(result,obj))
                             available = true;
                     }
@@ -408,13 +518,26 @@ function moveTo(obj) {
         default :
             break;
     }
-    console.log(available);
+    //如果是有效移动
     if(available) {
         var array = randomGenerate(1);
         setTimeout(function() {
             drawBoxes(array);
         },animationTime);
     }
+
+}
+
+//判断是否还有空位
+function hasBlank() {
+    for(var row=0;row<row_count;row++) {
+        for(var col=0;col<col_count;col++) {
+            if(box_array[row][col] == undefined) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 //将方块移动到特定位置，包括数组中的和界面中的
