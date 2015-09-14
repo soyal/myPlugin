@@ -221,11 +221,13 @@ var $container = $("#container");//游戏棋盘
 
 //按键事件
 $(function() {
+    //游戏开始
     $("#start").click(function() {
         initGame();
         $(this).text("Restart!");
 
     });
+    //游戏失败时，再次开始
     $("#again").click(function() {
         $("#mask").animate({
             opacity: 0
@@ -235,6 +237,7 @@ $(function() {
             $("#start").text("Restart!");
         });
     });
+    //设置键盘事件（PC端）
     $(document).on("keyup",function(e) {
         var keyCode = e.keyCode;
         switch (keyCode) {
@@ -266,6 +269,68 @@ $(function() {
                 return false;
         }
     });
+    //设置touch事件（移动端）
+    var mobile_startX = 0,mobile_startY = 0;
+    //事件处理函数
+    function touchHandler(e) {
+
+            switch(e.type) {
+                case "touchstart" :
+                    mobile_startX = e.targetTouches[0].clientX;
+                    mobile_startY = e.targetTouches[0].clientY;
+                    break;
+                case "touchend" :
+                    var mobile_endX = e.changedTouches[0].clientX;
+                    var mobile_endY = e.changedTouches[0].clientY;
+                    var diff_X = mobile_endX - mobile_startX;
+                    var diff_Y = mobile_endY - mobile_startY;
+                    //X轴
+                    if(Math.abs(diff_X) > Math.abs(diff_Y)) {
+                        if(diff_X > 0) {
+                            //右
+                            //alert("right");
+                            if(!isOperating)
+                            moveTo({
+                                direction:"right"
+                            });
+                        } else {
+                           // alert("left");
+                            if(!isOperating)
+                            moveTo({
+                                direction:"left"
+                            });
+                        }
+                        //Y轴
+                    } else if(Math.abs(diff_X) < Math.abs(diff_Y)) {
+                        if(diff_Y > 0) {
+                            //alert("bottom");
+                            if(!isOperating)
+                            moveTo({
+                                direction:"bottom"
+                            });
+                        } else {
+                           // alert("top");
+                            if(!isOperating)
+                            moveTo({
+                                direction:"top"
+                            });
+                        }
+                    }
+                    break;
+                case "touchmove" :
+                    console.log("touchmove");
+                    e.preventDefault();
+                    break;
+
+                default :
+                    break;
+            }
+
+    }
+    document.addEventListener("touchstart",touchHandler,false);
+    document.addEventListener("touchend",touchHandler,false);
+    document.addEventListener("touchmove",touchHandler,false);
+
 });
 
 //Box构造函数
